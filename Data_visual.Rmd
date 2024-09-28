@@ -1,0 +1,191 @@
+
+```{r}
+library(tidyverse)
+library(socviz)
+library(gapminder)
+library(here)
+library(ggthemes)
+
+p <- ggplot(
+  data = gapminder,
+  mapping = aes(x = gdpPercap, y = lifeExp)
+)
+p + geom_point(
+  alpha = 0.3,
+  mapping = aes(color = continent)) +
+  geom_smooth(method = "gam") +
+  scale_x_log10(labels = scales::label_dollar()) +
+  labs(
+    x = "GDP Per Capita",
+    y = "Life Expectancy in Years",
+    title = "Economic Growth and Life Expectancy",
+    subtitle = "Data points are country-years",
+    caption = "Source: Gapminder."
+  )
+
+```
+```{r}
+library(tidyverse)
+library(socviz)
+library(gapminder)
+p <- ggplot(
+  data = gapminder,
+  mapping = aes(x = pop, y = lifeExp)
+)
+p.out <- p + geom_point(
+  alpha = 0.3,
+  mapping = aes(color = factor(year))) +
+  geom_smooth(method = "gam") +
+  scale_x_log10(labels = scales::label_comma()) +
+  labs(
+    x = "Population",
+    y = "Life Expectancy in Years",
+    title = "Economic Growth and Life Expectancy",
+    subtitle = "Data points are country-years",
+    caption = "Source: Gapminder."
+  )
+###ggsave(filename = here("figures", "my_figure_png"), plot = p_out, height =8, width = 10, units = "in")
+```
+```{r}
+P <- ggplot(data = gapminder, mapping = aes(x = gdpPercap, y = lifeExp, color = continent))
+P + geom_point()+geom_smooth(method = "gam") + scale_x_log10(labels = scales::label_comma())
+```
+```{r}
+p <- ggplot(data = gapminder, mapping = aes(x = year, y = gdpPercap))
+p + geom_line(color = "gray78",aes(group = country)) + geom_smooth(size = 1.1, method ="loess", se = FALSE) + scale_y_log10(labels = scales::label_dollar())+ facet_wrap(~continent, ncol = 5)
+```
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x=age, y=childs))
+p+geom_point(alpha = 0.2) + geom_smooth()+ facet_grid(sex~race)
+```
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x= bigregion))
+p+geom_bar(mapping = aes(y =..prop..,group = FALSE))
+```
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x= religion, fill = religion))
+p+geom_bar() + guides(fill = FALSE)
+```
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x= religion))
+p+geom_bar(position = "dodge", mapping = aes( y = ..prop..,group = bigregion)) + facet_wrap(~bigregion, ncol = 4)
+```
+Not necessarily a good plot ....
+```{r}
+oh_wi <- c("OH","WI")
+p <- ggplot(data = subset(midwest,subset = state %in% oh_wi),mapping = aes(x=percollege, fill = state))
+p+geom_histogram(alpha = 0.4, bins = 20)
+```
+```{r}
+oh_wi <- c("OH","WI")
+p <- ggplot(data = subset(midwest, subset = state %in% oh_wi),mapping = aes(x=area, fill = state))
+p+geom_density(alpha = 0.4, mapping = aes (y = ..scaled..))
+```
+This is a bit hard to see through...so avoid to many transformations.
+```{r}
+p <- ggplot(data = titanic, mapping = aes(x = fate, y = percent, fill = sex))
+p + geom_col(position = "dodge")
+```
+```{r}
+p <- ggplot(data = oecd_sum, mapping = aes(x = year, y = diff, fill = hi_lo))
+p + geom_col()+guides(fill=FALSE)
+```
+```{r}
+rel_by_region <- gss_sm %>%
+  group_by(bigregion, religion) %>%
+  summarise(N = n()) %>%
+  mutate(freq = N/sum(N), pct = round((freq*100),0))
+```
+Dataset on organ donations in the OECD countries:
+```{r}
+p <- ggplot(data = organdata, mapping = aes(x = reorder(country, donors, FUN = median, na.rm = TRUE), y = donors))
+p+geom_boxplot() + coord_flip() + labs(x=NULL)
+```
+```{r}
+p <- ggplot(data = organdata, mapping = aes(x = reorder(country, donors, FUN = median, na.rm = TRUE), y = donors, fill= world ))
+p+geom_boxplot() + coord_flip() + labs(x=NULL)
+```
+```{r}
+p <- ggplot(data = organdata, mapping = aes(x = reorder(country, donors, FUN = median, na.rm = TRUE), y = donors, colour= world ))
+p+geom_jitter(position = position_jitter(width = 0.15)) + coord_flip() + labs(x=NULL)
+```
+```{r}
+by_country <- organdata %>% group_by(consent_law,country) %>%
+  summarise(donors_mean = mean(donors, na.rm = TRUE),donors_sd = sd(donors, na.rm = TRUE),gdp_mean = mean(gdp, na.rm = TRUE))
+
+by_country
+```
+```{r}
+by_country <- organdata %>% group_by(consent_law,country) %>%
+  summarise(across(where(is.numeric),list(meanvalue = mean, sdvalue = sd),na.rm = TRUE))
+p <- ggplot(data = by_country, mapping = aes(x=donors_meanvalue, y = reorder(country, donors_meanvalue), color = consent_law))
+p + geom_point()
+```
+```{r}
+library(ggrepel)
+by_country <- organdata %>% group_by(consent_law,country) %>%
+  summarise(across(where(is.numeric),list(meanvalue = mean, sdvalue = sd),na.rm = TRUE))
+p <- ggplot(data = by_country, mapping = aes(x=donors_meanvalue, y = reorder(country, donors_meanvalue), color = consent_law))
+p + geom_point() + facet_wrap(~consent_law, ncol = 1, scales = "free_y")
+
+d <- ggplot(data = by_country, mapping = aes(x = roads_meanvalue, y = donors_meanvalue))
+d+geom_point()+geom_text_repel(mapping = aes(label = country))
+
+```
+```{r}
+p_title <- "Presidential Elections"
+p_subtitle <- "1824 - 2016"
+p_caption <- "Provisional Data for 2016"
+x_label <- "Popular Vote(winner)"
+y_label <- "EC Votes (winner)"
+
+p <- ggplot(elections_historic, aes(x = popular_pct, y = ec_pct, label = winner_label))
+p + geom_point()+geom_hline(yintercept = 0.5, size = 1.4, color = "gray80") + geom_vline(xintercept = 0.5, size = 1.4, color = "gray80") + geom_text_repel()+scale_x_continuous(labels = scales::label_percent())+labs(title = p_title)
+
+```
+```{r}
+organdata$ind <-organdata$ccode %in% c("Italy", "Spa") & organdata$year > 1998 
+  
+p <- ggplot(data = organdata, mapping = aes(x= roads, y = donors, color = ind))
+p+geom_point()+annotate(geom = "text", x = 91, y = 33, label = "suprisingly high \n recovery rate", hjust = 0) + annotate(geom = "rect", xmin = 125, xmax = 155, ymin = 30, ymax = 35, fill = "red", alpha = 0.2)
+
+organdata
+```
+Different scales
+```{r}
+p <- ggplot(data = organdata, mapping = aes(x= roads, y = donors, color = world))
+p+geom_point()+scale_x_binned()
+
+p1 <- ggplot(data = organdata, mapping = aes(x= roads, y = donors, color = world))
+p1+geom_point()+scale_colour_discrete(labels = "Corporatist","Liberal","Social Democratic", "Unidentified") + labs(x = "Road Deaths", y = "Donor Procurement", color = "Welfare State")
+
+p2 <- ggplot(data = organdata, mapping = aes(x= roads, y = donors, color = world))
+p2+geom_point()+scale_colour_brewer(palette = "Accent")
+
+organdata
+```
+```{r}
+p <- ggplot(elections_historic, aes(x = popular_pct, y = ec_pct,label = winner_label))
+p + geom_point()+geom_hline(yintercept = 0.5, size = 1.4, color = "gray80") + geom_vline(xintercept = 0.5, size = 1.4, color = "gray80") + geom_text_repel(data=subset(elections_historic,year >1992))+scale_x_continuous(labels = scales::label_percent())
+```
+```{r}
+p <- ggplot(elections_historic, aes(x = popular_pct, y = ec_pct,label = winner_label))
+p + geom_point()+geom_hline(yintercept = 0.5, size = 1.4, color = "gray80") + geom_vline(xintercept = 0.5, size = 1.4, color = "gray80") + geom_text_repel(data=subset(elections_historic,year > 1992))+scale_x_continuous(labels = scales::label_percent()) 
+```
+```{r}
+elections_mean <- elections_historic %>% group_by(winner) %>% summarize(across(where(is.numeric),mean))
+p <- ggplot(data = elections_mean, mapping = aes(x=popular_pct, y = reorder(winner, popular_pct)))
+p + geom_point()
+```
+reorder() calculates the mean by default
+```{r}
+party_colors <- c("blue", "red")
+p0 <- ggplot(data = subset(county_data, flipped == "No"), mapping = aes(x = pop, y = black/100))
+p1 <- p0 + geom_point(alpha = 0.15, color = "gray50") + scale_x_log10(labels = scales:: label_comma())
+p2 <- p1 + geom_point(data = subset(county_data, flipped == "Yes"), mapping = aes(x = pop, y = black/100, color = partywinner16)) + scale_color_manual(values = party_colors)
+p3 <- p2 + geom_text_repel(data = subset(county_data, flipped =="Yes" & black >25), mapping = aes(label = state))
+p3 + theme_wsj()
+```
+Other themes are theme_bw(), there is also "The Economist" theme, theme_tufte() <- very stingy
+HOW TO DO A POPULATION DENSITY MAP FOR BEIJING?
+
